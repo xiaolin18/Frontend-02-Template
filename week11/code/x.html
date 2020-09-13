@@ -1,0 +1,40 @@
+<script>
+    // 每一个属性都会有多个监听
+    let callbacks = [];
+
+    let object = {
+        a: 2,
+        b: 3
+    };
+
+    let proxy = reactive(object);
+
+    // Vue中使用了effect这样一个API，传递一个函数，可以直接监听po上的一个属性，以此来代替事件监听机制
+    effect(() => {
+        console.log("effect come in: ");
+    });
+
+
+    function effect(callback) {
+        callbacks.push(callback);
+    }
+
+    // 给proxy包一层
+    // TODO: 每一个变量修改都会触发，遍历一遍callback,目标：只在对应属性发生变化的时候才会触发相应的callbacks
+    function reactive(object) {
+        return new Proxy(object, {
+            // proxy可以拦截到所有的操作，包括修改和新增属性
+            set(obj, prop, val) {
+                obj[prop] = val;
+                for(let callback of callbacks) {
+                    callback();
+                }
+                return obj[prop];
+            },
+            get(obj, prop) {
+                console.log(obj, prop)
+                return obj[prop];
+            }
+        });
+    }
+</script>
